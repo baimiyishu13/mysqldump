@@ -31,6 +31,10 @@ PATH=$PATH:/opt/mysql/bin/
 # 保留天数
 KEEP_BACKUPS_FOR=7 #days
 
+# 日志
+mkdir -p /data/backup/logs/
+LOG_FILE=/data/backup/logs/$TIMESTAMP.log
+
 #==============================================================================
 # 方法
 #==============================================================================
@@ -40,6 +44,8 @@ function delete_old_backups()
 {
   echo "正在删除 $BACKUP_DIR/*.sql.gz $KEEP_BACKUPS_FOR 天前的备份文件"
   find $BACKUP_DIR -type f -name "*.sql.gz" -mtime +$KEEP_BACKUPS_FOR -exec rm {} \;
+  echo "删除 $LOG_DIR/*.log $KEEP_BACKUPS_FOR 天前的备份文件"
+  find $LOG_FILE -type f -name "*.log" -mtime +$KEEP_BACKUPS_FOR -exec rm {} \;
 }
 
 # 登陆 mysql
@@ -94,7 +100,7 @@ function hr(){
 #==============================================================================
 delete_old_backups
 hr
-backup_databases
+backup_databases >> "$LOG_FILE"
 hr
 printf "All backed up!\n\n"
 
