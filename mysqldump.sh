@@ -23,7 +23,7 @@ BACKUP_DIR=/data/backup/$TIMESTAMP
 mkdir $BACKUP_DIR
 # MYSQL 用户密码
 MYSQL_UNAME=root
-MYSQL_PWORD="Yoi@12345"
+MYSQL_PWORD=""
 
 # mysqldump 命令
 PATH=$PATH:/opt/mysql/bin/
