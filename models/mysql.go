@@ -11,26 +11,23 @@ import (
 	"time"
 )
 
-/*
-	备份数据库
-	注意：这个示例假设`mysql`和`mysqldump`命令在你的`PATH`中可用。如果不是这样，可能需要提供完整的路径
-	这个Go CLI工具接受四个命令行参数：
-		1.`backupDir`（备份目录）
-		2.`mysqlUname`（MySQL用户名）
-		3.`mysqlPword`（MySQL密码）
-		4.`keepBackupsFor`（保留备份的天数
-	备份文件的路径格式为`<backupDir>/<YYYYMMDD>/<database>.sql.gz`。
-	备份文件的父目录是`<backupDir>/<YYYYMMDD>`，其中`<YYYYMMDD>`是格式化后的当前日期
-*/
-
 func main() {
 
 	// 定义命令行参数
 	backupDir := flag.String("backupDir", "/data/backup", "备份目录")
-	mysqlUname := flag.String("mysqlUname", "", "MySQL 用户名")
+	mysqlUname := flag.String("mysqlUname", "root", "MySQL 用户名")
 	mysqlPword := flag.String("mysqlPword", "", "MySQL 密码")
 	keepBackupsFor := flag.Int("keepBackupsFor", 7, "保留备份的天数")
 	flag.Parse()
+
+	// 定义帮助信息
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "  -backupDir string\t备份目录 (default \"/data/backup\")\n")
+		fmt.Fprintf(os.Stderr, "  -mysqlUname string\tMySQL user\n")
+		fmt.Fprintf(os.Stderr, "  -mysqlPword string\tMySQL passwd\n")
+		fmt.Fprintf(os.Stderr, "  -keepBackupsFor int\t保留备份的天数 (default 7)\n")
+	}
 
 	// 执行备份
 	err := backupDatabases(*backupDir, *mysqlUname, *mysqlPword, *keepBackupsFor)
@@ -45,8 +42,19 @@ func main() {
 func backupDatabases(backupDir, mysqlUname, mysqlPword string, keepBackupsFor int) error {
 	rmdir := backupDir
 	cmd := exec.Command("find", rmdir, "-type", "d", "-ctime", fmt.Sprintf("+%d", keepBackupsFor), "-exec", "rm", "-rf", "{}", "\\;")
-	fmt.Println(cmd)
+	//fmt.Println(cmd)
 	err := cmd.Run()
+	if err != nil {
+		if exitError, ok := err.(*exec.ExitError); ok {
+			if exitError.ExitCode() == 1 {
+				fmt.Println("👀 删除备份：没有找到符合需删除的备份目录")
+			} else {
+				return fmt.Errorf("🍄删除旧的备份失败: %w", err)
+			}
+		} else {
+			return fmt.Errorf("🤕 删除旧的备份失败: %w", err)
+		}
+	}
 
 	//获取数据库列表
 	//  /usr/local/bin/mysql -u root -p123 -e "SHOW DATABASES" |awk -F " " '{if (NR!=1) print $1}')

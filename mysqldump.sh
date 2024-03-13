@@ -39,7 +39,7 @@ KEEP_BACKUPS_FOR=7 #days
 function delete_old_backups()
 {
   echo "正在删除 $BACKUP_DIR/*.sql.gz $KEEP_BACKUPS_FOR 天前的备份文件"
-  find $BACKUP_DIR -type f -name "*.sql.gz" -mtime +$KEEP_BACKUPS_FOR -exec rm {} \;
+  find $BACKUP_DIR -type d -ctime +7 -exec rm -rf {} \;
 }
 
 # 登陆 mysql
